@@ -1,3 +1,4 @@
+from typing import List
 import pymunk
 from dataclasses import dataclass
 import modelParameters
@@ -5,34 +6,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def setupSpace():
+def setupSpace() -> pymunk.Space:
     space = pymunk.Space()
     space.gravity = -1000,0
-    space.damping = 0.0001
+    space.damping = 0.000001
     return space
 
 @dataclass
 class Cell:
     id:int
-    cellMass = 10 # pymunk variable, ignore
     xOffset:float
     yOffset:float
     xNominal:float
     yNominal:float
     xStart:float
     yStart:float
-    space:pymunk.space
+    space:pymunk.Space
     cellDiameter:float # mm radius
     static:bool = False
+    cellMass = 10 # pymunk variable, ignore
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         
         if (self.static):
             self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
         else:
             momentOfInertia = 10#pymunk.moment_for_circle(self.cellMass, 0, self.cellDiameter/2)
             self.body = pymunk.Body(self.cellMass, momentOfInertia, body_type=pymunk.Body.DYNAMIC)
-        
+                   
         self.body.position = (self.xPosition, self.yPosition)
         shape = pymunk.Circle(self.body,self.cellDiameter/2)
         shape.elasticity = 1
@@ -55,6 +56,10 @@ class Cell:
     def simYPos(self) -> float:
         return self.body.position.y
 
+    @property
+    def velocity(self) -> float:
+        return self.body.velocity
+
     def setStart(self, xPos:float, yPos:float) -> None:
         self.xStart = xPos
         self.yStart = yPos
@@ -71,14 +76,14 @@ class Bandolier:
     y: float = 0
     static:bool = False
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.createCells()
 
         if (not self.static):
             self.constrainCells()
         
     def createCells(self) -> None:
-        self.cells = []
+        self.cells:List[Cell] = []
 
         xTolerances = np.random.normal(modelParameters.BANDO_X_MU, modelParameters.BANDO_X_SIGMA, modelParameters.BANDO_CELL_COUNT)
         yTolerances = np.random.normal(modelParameters.BANDO_Y_MU, modelParameters.BANDO_Y_SIGMA, modelParameters.BANDO_CELL_COUNT)
@@ -110,13 +115,13 @@ class Bandolier:
             
 
 class Module:
-    def __init__(self, initialBandolierSpacing = 20, numBandos = modelParameters.MODULE_BANDO_COUNT) -> None:
-        self.bandoliers = []
-        self.space = setupSpace()
+    def __init__(self, numBandos = modelParameters.MODULE_BANDO_COUNT, initialBandolierSpacing = 0) -> None:
+        self.bandoliers:List[Bandolier] = []
+        self.space:pymunk.Space = setupSpace()
         self.simulated = False
 
         for i in range(numBandos):
-            xBandoOrigin = i*(modelParameters.BANDO_CELL_X + modelParameters.CELL_DIAMETER_CURRENT + initialBandolierSpacing)
+            xBandoOrigin = i*(abs(modelParameters.BANDO_CELL_X) + modelParameters.CELL_DIAMETER_CURRENT + 2*(abs(modelParameters.BANDO_X_MU)+3*modelParameters.BANDO_X_SIGMA) + initialBandolierSpacing)
             yBandoOrigin = 0
 
             if (i == 0):
@@ -126,7 +131,7 @@ class Module:
 
             self.bandoliers.append(Bandolier(i, self.space, xBandoOrigin, yBandoOrigin, static))
     
-    def getTotalWidth(self)->float: #mm
+    def getTotalWidth(self) -> float: #mm
         if (not self.simulated):
             return -1
         

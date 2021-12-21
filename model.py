@@ -1,5 +1,5 @@
 from multiprocessing import Pool
-from typing import Tuple
+from typing import Tuple, List
 import numpy as np
 
 from simulation import simulateModule
@@ -7,13 +7,13 @@ from components import Module
 import modelParameters
 import matplotlib.pyplot as plt
 
-def worker(_) -> Tuple[Module, float]:
+def worker(_) -> Tuple[Module, float, bool]:
     newModule = Module()
-    simulateModule(newModule)
-    return (newModule, newModule.getTotalWidth())
+    stable = simulateModule(newModule)
+    return (newModule, newModule.getTotalWidth(), stable)
 
 
-def showHistogram(results):
+def showHistogram(results:List[Tuple[Module, float, bool]]) -> None:
     widths = [x[1] for x in results]
 
     # q25, q75 = np.percentile(widths, [25, 75])
@@ -21,15 +21,19 @@ def showHistogram(results):
     # bins = round((max(widths) - min(widths)) / bin_width)
 
     fig = plt.figure()
-    # plt.hist(widths, density=True, bins=bins)  # density=False would make counts
-    plt.hist(widths)
+    # plt.hist(widths, density=True, bins=bins)  # density=False would make counts    
+
+    plt.hist(widths, density=True)
     plt.ylabel('Probability')
     plt.xlabel('Data')
 
 
-def runSimulation(numIterations:int, displayResults:bool=True):    
+def runSimulation(numIterations:int, displayResults:bool=True) -> List[Tuple[Module, float, bool]]:    
     pool = Pool()
     results = pool.map(worker, range(numIterations))
+
+    if (modelParameters.DISCARD_UNSTABLE_RESULTS):
+        results = filter(lambda x: (x[3]), results)
 
     largest = max(results, key=lambda x: x[1])
     smallest = min(results, key=lambda x: x[1])
@@ -39,6 +43,8 @@ def runSimulation(numIterations:int, displayResults:bool=True):
         smallest[0].displayModule(f"Smallest {smallest[1]}mm", False)
 
         showHistogram(results)
+    
+    return results
 
 
 

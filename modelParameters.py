@@ -1,3 +1,16 @@
+# Number of Iterations
+MODEL_NUM_ITERATIONS = 10
+
+# Maximum number of steps before exit
+MODEL_MAX_STEPS = 30000
+
+# Final Velocity Tolerance
+MODEL_MIN_VELOCITY = 0.2 # lower this number to increase accuracy. The lower the number, the longer the runtime. Must be > 0
+MODEL_IN_VELOCITY_THRESHOLD_COUNT = 500
+
+# If the model is not stable (ie, velocities are not in range) discard result
+DISCARD_UNSTABLE_RESULTS = True
+
 # BANDOLIER PARAMETERS
 """
 
@@ -25,19 +38,16 @@
         
 """
 
-# Number of Iterations
-MODEL_NUM_ITERATIONS = 1
-
 # Bandolier cell count
-BANDO_CELL_COUNT = 20
+BANDO_CELL_COUNT = 50
 
 # Number of Bandoliers in a module
-MODULE_BANDO_COUNT = 3
+MODULE_BANDO_COUNT = 7
 
 # Bandolier Designed values (as in CAD)
 BANDO_CELL_X = 16 #mm
 BANDO_CELL_Y1 = 12 #mm
-BANDO_CELL_Y2 = 23 #mm
+BANDO_CELL_Y2 = 24 #mm
 
 # Bandolier Tolerance values (measured)
 BANDO_X_MU = 0 # mm
