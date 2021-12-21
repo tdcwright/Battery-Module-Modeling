@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Tuple
 import pymunk
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import modelParameters
 import numpy as np
 import matplotlib.pyplot as plt
@@ -24,6 +24,7 @@ class Cell:
     space:pymunk.Space
     cellDiameter:float # mm radius
     static:bool = False
+    color:Tuple[int, int, int, int] = field(default=(-1,-1,-1,-1))
     cellMass = 10 # pymunk variable, ignore
 
     def __post_init__(self) -> None:
@@ -35,10 +36,13 @@ class Cell:
             self.body = pymunk.Body(self.cellMass, momentOfInertia, body_type=pymunk.Body.DYNAMIC)
                    
         self.body.position = (self.xPosition, self.yPosition)
-        shape = pymunk.Circle(self.body,self.cellDiameter/2)
-        shape.elasticity = 1
+        self.shape = pymunk.Circle(self.body,self.cellDiameter/2)
+        self.shape.elasticity = 1
         
-        self.space.add(self.body, shape)
+        if (min(self.color) >= 0):
+            self.shape.color = self.color
+
+        self.space.add(self.body, self.shape)
     
     @property
     def xPosition(self) -> float:
@@ -77,10 +81,14 @@ class Bandolier:
     static:bool = False
 
     def __post_init__(self) -> None:
+        self.colour = modelParameters.COLOUR_ALL[self.id%(len(modelParameters.COLOUR_ALL))]
+        
         self.createCells()
 
         if (not self.static):
             self.constrainCells()
+
+            self.constrainBando()
         
     def createCells(self) -> None:
         self.cells:List[Cell] = []
@@ -96,18 +104,26 @@ class Bandolier:
             else:
                 yPos = ((i-1)/2)*modelParameters.BANDO_CELL_Y2 + modelParameters.BANDO_CELL_Y1
             
-            newCell = Cell(i, xTolerances[i],yTolerances[i],xPos,yPos,self.x,self.y,self.space,diameterTolerances[i],self.static)
+            newCell = Cell(i, xTolerances[i],yTolerances[i],xPos,yPos,self.x,self.y,self.space,diameterTolerances[i],self.static, self.colour)
 
             self.cells.append(newCell)
     
     def constrainCells(self) -> None:
         for i in range(modelParameters.BANDO_CELL_COUNT-1):
             joint1 = pymunk.PinJoint(self.cells[i].body,self.cells[i+1].body)
-
+            
             self.space.add(joint1)
             if i != modelParameters.BANDO_CELL_COUNT-2:
                 joint2 = pymunk.PinJoint(self.cells[i].body,self.cells[i+2].body)
+
                 self.space.add(joint2)
+    
+    def constrainBando(self) -> None:
+        pass
+        # passengerJoint = pymunk.GrooveJoint(self.cells[0],
+        # driverJoint = self.cells[-1]
+
+        # self.space.add(passengerJoint)
     
     def updatePosition(self) -> None:
         for cell in self.cells:
@@ -154,6 +170,9 @@ class Module:
         ax.set_aspect("equal")
 
         drawOption = pymunk.matplotlib_util.DrawOptions(ax)
+        drawOption.flags = pymunk.SpaceDebugDrawOptions.DRAW_SHAPES | \
+                            pymunk.SpaceDebugDrawOptions.DRAW_COLLISION_POINTS | \
+                            (pymunk.SpaceDebugDrawOptions.DRAW_CONSTRAINTS if modelParameters.DISPLAY_CONSTRAINTS else 0)
         self.space.debug_draw(drawOption)
         
         if (blocking):

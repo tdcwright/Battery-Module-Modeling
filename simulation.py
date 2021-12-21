@@ -89,7 +89,7 @@ def simulateModule(module:components.Module, displayFigure:bool=False, animateSi
 
 
 if __name__ == "__main__":
-    m = components.Module(modelParameters.MODULE_BANDO_COUNT)
+    m = components.Module(modelParameters.MODULE_BANDO_COUNT, 30)
     # simulateModule(m,True, True)
     simulateModule(m, True, False)
 
