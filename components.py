@@ -1,7 +1,10 @@
 from typing import List, Tuple
 import pymunk
 from dataclasses import dataclass, field
+
 import modelParameters
+from endConstraints import EndConstraint, EndLimit
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -24,7 +27,7 @@ class Cell:
     space:pymunk.Space
     cellDiameter:float # mm radius
     static:bool = False
-    color:Tuple[int, int, int, int] = field(default=(-1,-1,-1,-1))
+    colour:Tuple[int, int, int, int] = field(default=(-1,-1,-1,-1))
     cellMass = 10 # pymunk variable, ignore
 
     def __post_init__(self) -> None:
@@ -39,8 +42,10 @@ class Cell:
         self.shape = pymunk.Circle(self.body,self.cellDiameter/2)
         self.shape.elasticity = 1
         
-        if (min(self.color) >= 0):
-            self.shape.color = self.color
+        if (min(self.colour) >= 0):
+            self.shape.color = self.colour
+
+        self.setFilter(1,1)
 
         self.space.add(self.body, self.shape)
     
@@ -69,7 +74,9 @@ class Cell:
         self.yStart = yPos
         
         self.body.position = (self.xPosition, self.yPosition)
-
+    
+    def setFilter(self, category:int, mask:int) -> None:
+        self.shape.filter = pymunk.ShapeFilter(categories=category, mask=mask)
 
 
 @dataclass
@@ -81,15 +88,18 @@ class Bandolier:
     static:bool = False
 
     def __post_init__(self) -> None:
-        self.colour = modelParameters.COLOUR_ALL[self.id%(len(modelParameters.COLOUR_ALL))]
+        self.desiredX:float = self.id*modelParameters.BANDO_DESIRED_SPACING
+
+        self.colour:Tuple[int, int, int, int] = modelParameters.COLOUR_ALL[self.id%(len(modelParameters.COLOUR_ALL))]
         
         self.createCells()
+
+        if (modelParameters.INCLUDE_END_CONSTRAINTS):
+            self.setupEndConstraints()
 
         if (not self.static):
             self.constrainCells()
 
-            self.constrainBando()
-        
     def createCells(self) -> None:
         self.cells:List[Cell] = []
 
@@ -104,10 +114,57 @@ class Bandolier:
             else:
                 yPos = ((i-1)/2)*modelParameters.BANDO_CELL_Y2 + modelParameters.BANDO_CELL_Y1
             
-            newCell = Cell(i, xTolerances[i],yTolerances[i],xPos,yPos,self.x,self.y,self.space,diameterTolerances[i],self.static, self.colour)
+            newCell = Cell(i,
+                xTolerances[i],
+                yTolerances[i],
+                xPos,
+                yPos,
+                self.x,
+                self.y,
+                self.space,
+                diameterTolerances[i],
+                self.static,
+                self.colour)
 
             self.cells.append(newCell)
     
+    def setupEndConstraints(self) ->None:
+        self.lowerConstraint = EndConstraint(modelParameters.END_CONSTRAINT_LOWER_X,
+            self.cells[0].yNominal,
+            self.cells[0].yNominal-modelParameters.END_CONSTRAINT_LOWER_Y,
+            self.x,
+            self.y,
+            self.space,
+            [x.body for x in self.cells[0:2]],
+            self.colour,
+            static=self.static)
+
+        self.upperConstraint = EndConstraint(modelParameters.END_CONSTRAINT_UPPER_X,
+            self.cells[-1].yNominal,
+            self.cells[-1].yNominal+modelParameters.END_CONSTRAINT_UPPER_Y,
+            self.x,
+            self.y,
+            self.space,
+            [x.body for x in self.cells[-2:modelParameters.BANDO_CELL_COUNT]],
+            self.colour,
+            static=self.static)
+        
+        self.lowerLimit = EndLimit(self.desiredX,
+            modelParameters.END_LIMIT_LOWER_X,
+            self.cells[0].yNominal-modelParameters.END_LIMIT_LOWER_Y,
+            False,                
+            self.space,
+            self.colour)
+        
+        self.upperLimit = EndLimit(self.desiredX,
+            modelParameters.END_LIMIT_UPPER_X,
+            self.cells[-1].yNominal+modelParameters.END_LIMIT_UPPER_Y,
+            True,                
+            self.space,
+            self.colour)
+        
+        self.constrainBando()
+
     def constrainCells(self) -> None:
         for i in range(modelParameters.BANDO_CELL_COUNT-1):
             joint1 = pymunk.PinJoint(self.cells[i].body,self.cells[i+1].body)
@@ -119,25 +176,46 @@ class Bandolier:
                 self.space.add(joint2)
     
     def constrainBando(self) -> None:
-        pass
-        # passengerJoint = pymunk.GrooveJoint(self.cells[0],
-        # driverJoint = self.cells[-1]
 
-        # self.space.add(passengerJoint)
+        category = 2**self.id
+        self.upperConstraint.setFilter(category, category)
+        self.lowerConstraint.setFilter(category, category)
+
+        self.upperLimit.setFilter(category, category)
+        self.lowerLimit.setFilter(category, category)
     
+    def distanceFromUpperLimit(self) -> Tuple[float, float]:
+        if (not modelParameters.INCLUDE_END_CONSTRAINTS):
+            return 0
+        
+        limitPos = (self.desiredX+modelParameters.END_LIMIT_UPPER_X, self.cells[-1].yNominal+modelParameters.END_LIMIT_UPPER_Y)
+        return tuple(np.subtract(self.upperConstraint.body.position, limitPos))
+    
+    def distanceFromLowerLimit(self) -> Tuple[float, float]:
+        if (not modelParameters.INCLUDE_END_CONSTRAINTS):
+            return 0
+        
+        limitPos = (self.desiredX+modelParameters.END_LIMIT_LOWER_X, self.cells[0].yNominal-modelParameters.END_LIMIT_LOWER_Y)
+        return tuple(np.subtract(self.lowerConstraint.body.position, limitPos))
+
     def updatePosition(self) -> None:
         for cell in self.cells:
             cell.setStart(self.x, self.y)
             
 
 class Module:
-    def __init__(self, numBandos = modelParameters.MODULE_BANDO_COUNT, initialBandolierSpacing = 0) -> None:
+    def __init__(self, numBandos:int = modelParameters.MODULE_BANDO_COUNT, initialBandolierSpacing:int = 0) -> None:
         self.bandoliers:List[Bandolier] = []
         self.space:pymunk.Space = setupSpace()
         self.simulated = False
 
         for i in range(numBandos):
             xBandoOrigin = i*(abs(modelParameters.BANDO_CELL_X) + modelParameters.CELL_DIAMETER_CURRENT + 2*(abs(modelParameters.BANDO_X_MU)+3*modelParameters.BANDO_X_SIGMA) + initialBandolierSpacing)
+            
+            startingDistanceFromEndConstraint = 1 #mm 
+            if (i != 0 and modelParameters.INCLUDE_END_CONSTRAINTS and xBandoOrigin < i*modelParameters.BANDO_DESIRED_SPACING+startingDistanceFromEndConstraint):
+                xBandoOrigin = i*modelParameters.BANDO_DESIRED_SPACING+startingDistanceFromEndConstraint
+            
             yBandoOrigin = 0
 
             if (i == 0):
@@ -161,6 +239,11 @@ class Module:
         rightMostX = max([cell.simXPos for cell in self.bandoliers[-1].cells])
         bottomMostY = min([bando.cells[0].simYPos for bando in self.bandoliers])
         topMostY = max([bando.cells[-1].simYPos for bando in self.bandoliers])
+
+        if modelParameters.INCLUDE_END_CONSTRAINTS:
+            bottomMostY -= max(modelParameters.END_LIMIT_LOWER_Y, modelParameters.END_CONSTRAINT_LOWER_Y)
+            topMostY += max(modelParameters.END_LIMIT_UPPER_Y, modelParameters.END_CONSTRAINT_UPPER_Y)
+
         figureXLim = (leftMostX-25, rightMostX+25)
         figureYLim = (bottomMostY-25, topMostY+25)
         

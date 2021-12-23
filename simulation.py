@@ -1,3 +1,4 @@
+from typing import Tuple
 import matplotlib.pyplot as plt
 from matplotlib import animation
 import numpy as np
@@ -45,6 +46,9 @@ def simulateModule(module:components.Module, displayFigure:bool=False, animateSi
         ax.set_aspect("equal")
 
         drawOption = pymunk.matplotlib_util.DrawOptions(ax)
+        drawOption.flags = pymunk.SpaceDebugDrawOptions.DRAW_SHAPES | \
+                            pymunk.SpaceDebugDrawOptions.DRAW_COLLISION_POINTS | \
+                            (pymunk.SpaceDebugDrawOptions.DRAW_CONSTRAINTS if modelParameters.DISPLAY_CONSTRAINTS else 0)
 
         frames = numberOfSimSteps/stepsPerFrame
         anim = animation.FuncAnimation(fig, animate, init_func=init, frames=int(frames), interval=10, blit=False, repeat=False)
@@ -53,13 +57,17 @@ def simulateModule(module:components.Module, displayFigure:bool=False, animateSi
         finalBandoVelocities = []
         countInTreshold = 0
 
+        stepDt = 0.0001
+
         for x in range(modelParameters.MODEL_MAX_STEPS if numberOfSimSteps < 0 else numberOfSimSteps):
 
             currVelocities = [x.velocity[0] for x in module.bandoliers[-1].cells]
+            maxVelocity = max(np.absolute(currVelocities))
+           
             finalBandoVelocities.append(currVelocities)
 
             if (numberOfSimSteps < 0):
-                if (max(np.absolute(currVelocities)) < modelParameters.MODEL_MIN_VELOCITY):
+                if (maxVelocity < modelParameters.MODEL_MIN_VELOCITY):
                     countInTreshold+=1
                 else:
                     countInTreshold = 0
@@ -68,7 +76,7 @@ def simulateModule(module:components.Module, displayFigure:bool=False, animateSi
                 if (countInTreshold >= modelParameters.MODEL_IN_VELOCITY_THRESHOLD_COUNT):
                     stable = True
                     break
-            module.space.step(0.001)
+            module.space.step(stepDt)
 
 
         if (displayFigure):
@@ -79,7 +87,8 @@ def simulateModule(module:components.Module, displayFigure:bool=False, animateSi
             plt.title(f"Maximum Velocity of final Bando, Stable: {stableString}")
             plt.xlabel("Simulation Step Count")
             plt.ylabel("Maximum cell x velocity")
-            plt.plot([max(x) for x in finalBandoVelocities])
+            plt.plot([max(x) for x in finalBandoVelocities])         
+            
 
             module.displayModule()
 
@@ -89,8 +98,11 @@ def simulateModule(module:components.Module, displayFigure:bool=False, animateSi
 
 
 if __name__ == "__main__":
-    m = components.Module(modelParameters.MODULE_BANDO_COUNT, 30)
+    m = components.Module(modelParameters.MODULE_BANDO_COUNT)
     # simulateModule(m,True, True)
     simulateModule(m, True, False)
+
+    for i,b in enumerate(m.bandoliers):
+        print(f"Bandolier {i}\n\tUpper: {b.distanceFromUpperLimit()}\n\tLower: {b.distanceFromLowerLimit()}")
 
     print(f"Width: {m.getTotalWidth():1.3f}mm")

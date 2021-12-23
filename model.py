@@ -33,7 +33,7 @@ def runSimulation(numIterations:int, displayResults:bool=True) -> List[Tuple[Mod
     results = pool.map(worker, range(numIterations))
 
     if (modelParameters.DISCARD_UNSTABLE_RESULTS):
-        results = filter(lambda x: (x[3]), results)
+        results = list(filter(lambda x: (x[2]), results))
 
     largest = max(results, key=lambda x: x[1])
     smallest = min(results, key=lambda x: x[1])
