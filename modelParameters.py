@@ -44,10 +44,10 @@ DISCARD_UNSTABLE_RESULTS = True
 """
 
 # Bandolier cell count
-BANDO_CELL_COUNT = 100
+BANDO_CELL_COUNT = 144
 
 # Number of Bandoliers in a module
-MODULE_BANDO_COUNT = 9
+MODULE_BANDO_COUNT = 11
 
 # Bandolier Designed values (as in CAD)
 BANDO_CELL_X = 16 #mm
@@ -123,7 +123,7 @@ END_CONSTRAINT_LOWER_Y|             | |              N               | |        
 """
 
 
-INCLUDE_END_CONSTRAINTS = False
+INCLUDE_END_CONSTRAINTS = True
 
 BANDO_DESIRED_SPACING = 30 # from same point to same point
 
@@ -183,7 +183,7 @@ END_LIMIT_LOWER_Y |             | |              N               | |            
 END_LIMIT_LOWER_X = 8
 END_LIMIT_UPPER_X = 8
 
-END_CONSTRAINT_INCLUDE_Y_CONSTRAINTS = True # whether to include ▯ limits
+END_CONSTRAINT_INCLUDE_Y_CONSTRAINTS = False # whether to include ▯ limits
 END_LIMIT_LOWER_Y = 40
 END_LIMIT_UPPER_Y = 40
 

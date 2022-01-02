@@ -1,4 +1,6 @@
 from multiprocessing import Pool
+from tqdm import tqdm
+
 from typing import Tuple, List
 import numpy as np
 
@@ -7,9 +9,12 @@ from components import Module
 import modelParameters
 import matplotlib.pyplot as plt
 
-def worker(_) -> Tuple[Module, float, bool]:
+def worker(iteration) -> Tuple[Module, float, bool]:
     newModule = Module()
-    stable = simulateModule(newModule)
+    stable = simulateModule(newModule,includeProgressBar=False)
+
+    # print("Stable result\r" if stable else "Unstable result")
+
     return (newModule, newModule.getTotalWidth(), stable)
 
 
@@ -30,10 +35,14 @@ def showHistogram(results:List[Tuple[Module, float, bool]]) -> None:
 
 def runSimulation(numIterations:int, displayResults:bool=True) -> List[Tuple[Module, float, bool]]:    
     pool = Pool()
-    results = pool.map(worker, range(numIterations))
+
+    results:List[Tuple[Module, float, bool]] = list(tqdm(pool.imap_unordered(worker, range(numIterations)), total=numIterations,unit="Iteration", desc="Model"))
 
     if (modelParameters.DISCARD_UNSTABLE_RESULTS):
         results = list(filter(lambda x: (x[2]), results))
+    
+        print(f"Number of stable iterations: {len(results)}")
+    
 
     largest = max(results, key=lambda x: x[1])
     smallest = min(results, key=lambda x: x[1])

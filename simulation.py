@@ -1,7 +1,8 @@
-from typing import Tuple
 import matplotlib.pyplot as plt
 from matplotlib import animation
 import numpy as np
+
+from tqdm import tqdm
 
 import pymunk
 import pymunk.matplotlib_util
@@ -9,7 +10,7 @@ import pymunk.matplotlib_util
 import components
 import modelParameters
 
-def simulateModule(module:components.Module, displayFigure:bool=False, animateSimulation:bool=False, numberOfSimSteps:int=-1)->bool:
+def simulateModule(module:components.Module, displayFigure:bool=False, animateSimulation:bool=False, numberOfSimSteps:int=-1,simulationTitle="",includeProgressBar=True, progressBarPos=0)->bool:
     
     stable = False
 
@@ -57,9 +58,10 @@ def simulateModule(module:components.Module, displayFigure:bool=False, animateSi
         finalBandoVelocities = []
         countInTreshold = 0
 
-        stepDt = 0.0001
+        stepDt = 0.001
 
-        for x in range(modelParameters.MODEL_MAX_STEPS if numberOfSimSteps < 0 else numberOfSimSteps):
+
+        for x in tqdm(range(modelParameters.MODEL_MAX_STEPS if numberOfSimSteps < 0 else numberOfSimSteps), desc=simulationTitle, position=progressBarPos,leave=True, unit="step", disable=(not includeProgressBar)):
 
             currVelocities = [x.velocity[0] for x in module.bandoliers[-1].cells]
             maxVelocity = max(np.absolute(currVelocities))

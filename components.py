@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 def setupSpace() -> pymunk.Space:
     space = pymunk.Space()
     space.gravity = -1000,0
-    space.damping = 0.000001
+    space.damping = 0.00000000000000000000000001
+    
     return space
 
 @dataclass
@@ -168,7 +169,7 @@ class Bandolier:
     def constrainCells(self) -> None:
         for i in range(modelParameters.BANDO_CELL_COUNT-1):
             joint1 = pymunk.PinJoint(self.cells[i].body,self.cells[i+1].body)
-            
+
             self.space.add(joint1)
             if i != modelParameters.BANDO_CELL_COUNT-2:
                 joint2 = pymunk.PinJoint(self.cells[i].body,self.cells[i+2].body)
@@ -210,7 +211,13 @@ class Module:
         self.simulated = False
 
         for i in range(numBandos):
-            xBandoOrigin = i*(abs(modelParameters.BANDO_CELL_X) + modelParameters.CELL_DIAMETER_CURRENT + 2*(abs(modelParameters.BANDO_X_MU)+3*modelParameters.BANDO_X_SIGMA) + initialBandolierSpacing)
+            # xBandoOrigin = i*(abs(modelParameters.BANDO_CELL_X) + modelParameters.CELL_DIAMETER_CURRENT + 2*(abs(modelParameters.BANDO_X_MU)+3*modelParameters.BANDO_X_SIGMA) + initialBandolierSpacing)
+            
+            maxCellDiam = modelParameters.CELL_DIAMETER_CURRENT + modelParameters.CELL_DIAMETER_MU + 3*modelParameters.CELL_DIAMETER_SIGMA
+            maxCellOffset = modelParameters.CELL_DIAMETER_MU+3*modelParameters.CELL_DIAMETER_SIGMA
+            xMinimalSpacingOfset=np.sqrt((maxCellDiam+maxCellOffset+1)**2-(modelParameters.BANDO_CELL_Y2/2)**2)
+
+            xBandoOrigin = i*(abs(modelParameters.BANDO_CELL_X) + xMinimalSpacingOfset + initialBandolierSpacing)
             
             startingDistanceFromEndConstraint = 1 #mm 
             if (i != 0 and modelParameters.INCLUDE_END_CONSTRAINTS and xBandoOrigin < i*modelParameters.BANDO_DESIRED_SPACING+startingDistanceFromEndConstraint):
