@@ -11,7 +11,7 @@ import components
 import modelParameters
 
 def simulateModule(module:components.Module, displayFigure:bool=False, animateSimulation:bool=False, numberOfSimSteps:int=-1,simulationTitle="",includeProgressBar=True, progressBarPos=0)->bool:
-    
+    modelParams:modelParameters.ModelParams = module.modelParams
     stable = False
 
     def init():
@@ -49,7 +49,7 @@ def simulateModule(module:components.Module, displayFigure:bool=False, animateSi
         drawOption = pymunk.matplotlib_util.DrawOptions(ax)
         drawOption.flags = pymunk.SpaceDebugDrawOptions.DRAW_SHAPES | \
                             pymunk.SpaceDebugDrawOptions.DRAW_COLLISION_POINTS | \
-                            (pymunk.SpaceDebugDrawOptions.DRAW_CONSTRAINTS if modelParameters.DISPLAY_CONSTRAINTS else 0)
+                            (pymunk.SpaceDebugDrawOptions.DRAW_CONSTRAINTS if modelParams.DISPLAY_CONSTRAINTS else 0)
 
         frames = numberOfSimSteps/stepsPerFrame
         anim = animation.FuncAnimation(fig, animate, init_func=init, frames=int(frames), interval=10, blit=False, repeat=False)
@@ -61,7 +61,7 @@ def simulateModule(module:components.Module, displayFigure:bool=False, animateSi
         stepDt = 0.001
 
 
-        for x in tqdm(range(modelParameters.MODEL_MAX_STEPS if numberOfSimSteps < 0 else numberOfSimSteps), desc=simulationTitle, position=progressBarPos,leave=True, unit="step", disable=(not includeProgressBar)):
+        for x in tqdm(range(modelParams.MODEL_MAX_STEPS if numberOfSimSteps < 0 else numberOfSimSteps), desc=simulationTitle, position=progressBarPos,leave=True, unit="step", disable=(not includeProgressBar)):
 
             currVelocities = [x.velocity[0] for x in module.bandoliers[-1].cells]
             maxVelocity = max(np.absolute(currVelocities))
@@ -69,13 +69,13 @@ def simulateModule(module:components.Module, displayFigure:bool=False, animateSi
             finalBandoVelocities.append(currVelocities)
 
             if (numberOfSimSteps < 0):
-                if (maxVelocity < modelParameters.MODEL_MIN_VELOCITY):
+                if (maxVelocity < modelParams.MODEL_MIN_VELOCITY):
                     countInTreshold+=1
                 else:
                     countInTreshold = 0
                 
                 
-                if (countInTreshold >= modelParameters.MODEL_IN_VELOCITY_THRESHOLD_COUNT):
+                if (countInTreshold >= modelParams.MODEL_IN_VELOCITY_THRESHOLD_COUNT):
                     stable = True
                     break
             module.space.step(stepDt)
@@ -100,7 +100,7 @@ def simulateModule(module:components.Module, displayFigure:bool=False, animateSi
 
 
 if __name__ == "__main__":
-    m = components.Module(modelParameters.MODULE_BANDO_COUNT)
+    m = components.Module()
     # simulateModule(m,True, True)
     simulateModule(m, True, False)
 

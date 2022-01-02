@@ -17,6 +17,7 @@ class EndConstraint:
     colour:Tuple[int, int, int, int] = field(default=(-1,-1,-1,-1))
     xThickness:float = 5 #mm
     static:bool=False
+    modelParams:modelParameters.ModelParams = modelParameters.DEFAULT_PARAMETERS
 
     def __post_init__ (self) -> None:
         if (self.static):
@@ -64,6 +65,7 @@ class EndLimit:
     colour:Tuple[int, int, int, int] = field(default=(-1,-1,-1,-1))
     height:float = 20 # mm high walls
     wallThickness:float = 5     #mm thick walls
+    modelParams:modelParameters.ModelParams = modelParameters.DEFAULT_PARAMETERS
 
     def __post_init__ (self) -> None:
 
@@ -84,7 +86,7 @@ class EndLimit:
                                 (xPos-self.wallThickness,yPosInner), \
                                 ]))
 
-        if (modelParameters.END_CONSTRAINT_INCLUDE_Y_CONSTRAINTS):  
+        if (self.modelParams.END_CONSTRAINT_INCLUDE_Y_CONSTRAINTS):  
             thickness = self.wallThickness if yPosOuter > yPosInner else -self.wallThickness
             shapes.append(pymunk.Poly(body, [\
                                     (xPos,yPosOuter), \
