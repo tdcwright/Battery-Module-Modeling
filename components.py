@@ -1,3 +1,16 @@
+###############
+# components.py
+# TOM WRIGHT 2021
+###############
+
+"""
+Class definitions to handle the interactions between cells, bandoliers and modules. A module is created with
+a set of model parameters (by default set to the values specified in modelParameters.py). Creating a module
+creates a set of bandoliers, containing a set of cells. Since the simulation is a physics based simulaion,
+some initial distance between bandoliers must be set, by default this is minimised, but can be increased if
+needed. All other paremeters of cell spacing, cell count, bandolier count, etc are set in modelParameters.py.
+"""
+
 from typing import List, Tuple
 import pymunk
 from dataclasses import dataclass, field
@@ -8,7 +21,7 @@ from endConstraints import EndConstraint, EndLimit
 import numpy as np
 import matplotlib.pyplot as plt
 
-
+# Set up simulation space with arbitary gravity and low damping
 def setupSpace() -> pymunk.Space:
     space = pymunk.Space()
     space.gravity = -1000,0
@@ -16,20 +29,20 @@ def setupSpace() -> pymunk.Space:
     
     return space
 
+# Definition of Cell class containing cell id (working from lowest cell to highest cell) and its positions
 @dataclass
 class Cell:
-    id:int
-    xOffset:float
-    yOffset:float
-    xNominal:float
-    yNominal:float
-    xStart:float
-    yStart:float
-    space:pymunk.Space
+    id:int # cell ID
+    xOffset:float # the variance in cell placement based on tolerance
+    yOffset:float # the variance in cell placement based on tolerance
+    xNominal:float # the CAD perfect position of the cell in a bandolier
+    yNominal:float # the CAD perfect position of the cell in a bandolier
+    xStart:float # the offset for the physics based simulation
+    yStart:float # the offset for the physics based simulation
+    space:pymunk.Space # simulation space
     cellDiameter:float # mm radius
-    static:bool = False
-    colour:Tuple[int, int, int, int] = field(default=(-1,-1,-1,-1))
-    cellMass = 10 # pymunk variable, ignore
+    static:bool = False # Defines if the cell is fixed for the purposes of the simulation
+    colour:Tuple[int, int, int, int] = field(default=(-1,-1,-1,-1)) # colour for visualisation purposes
     modelParams:modelParameters.ModelParams = modelParameters.DEFAULT_PARAMETERS
 
     def __post_init__(self) -> None:
@@ -37,12 +50,14 @@ class Cell:
         if (self.static):
             self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
         else:
-            momentOfInertia = 10#pymunk.moment_for_circle(self.cellMass, 0, self.cellDiameter/2)
-            self.body = pymunk.Body(self.cellMass, momentOfInertia, body_type=pymunk.Body.DYNAMIC)
+            cellMass = 10 # arbitary pymunk simulation variable, ignore
+            momentOfInertia = 10 # arbitary pymunk simulation variable, ignore
+            self.body = pymunk.Body(cellMass, momentOfInertia, body_type=pymunk.Body.DYNAMIC)
                    
         self.body.position = (self.xPosition, self.yPosition)
         self.shape = pymunk.Circle(self.body,self.cellDiameter/2)
-        self.shape.elasticity = 1
+        self.shape.elasticity = 0.0
+        # self.shape.friction = 0.2
         
         if (min(self.colour) >= 0):
             self.shape.color = self.colour
@@ -80,7 +95,7 @@ class Cell:
     def setFilter(self, category:int, mask:int) -> None:
         self.shape.filter = pymunk.ShapeFilter(categories=category, mask=mask)
 
-
+# class definition of Bandolier to handle collections of cells and end constraints
 @dataclass
 class Bandolier:
     id: int
@@ -103,6 +118,7 @@ class Bandolier:
         if (not self.static):
             self.constrainCells()
 
+    # Creation of random variation in cell position and diameter
     def createCells(self) -> None:
         self.cells:List[Cell] = []
 
@@ -272,7 +288,7 @@ class Module:
         drawOption = pymunk.matplotlib_util.DrawOptions(ax)
         drawOption.flags = pymunk.SpaceDebugDrawOptions.DRAW_SHAPES | \
                             pymunk.SpaceDebugDrawOptions.DRAW_COLLISION_POINTS | \
-                            (pymunk.SpaceDebugDrawOptions.DRAW_CONSTRAINTS if self.modelParams.DISPLAY_CONSTRAINTS else 0)
+                            (pymunk.SpaceDebugDrawOptions.DRAW_CONSTRAINTS if modelParameters.DISPLAY_CONSTRAINTS else 0)
         self.space.debug_draw(drawOption)
         
         if (blocking):

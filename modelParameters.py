@@ -1,10 +1,18 @@
+###############
+# modelParameters.py
+# TOM WRIGHT 2021
+###############
+
+"""
+Definitions of variable parameters and model parameters to make the simulation, model and module work as intended.
+These values should be changed to match reality.
+"""
+
 # Number of Iterations
 MODEL_NUM_ITERATIONS = 10
 
-# Maximum number of steps before exit
-MODEL_MAX_STEPS = 30000
-
 # Final Velocity Tolerance
+MODEL_MAX_STEPS = 30000 # Maximum number of steps before exit
 MODEL_MIN_VELOCITY = 0.2 # lower this number to increase accuracy. The lower the number, the longer the runtime. Must be > 0
 MODEL_IN_VELOCITY_THRESHOLD_COUNT = 500
 
@@ -116,7 +124,7 @@ END_CONSTRAINT_LOWER_Y|             | |              N               | |        
                       |             |‡|              |               |‡|            | 
                       ‾‾‾‾‾‾‾‾‾‾‾‾‾‾^                                ^  ‾‾‾‾‾‾‾‾‾‾‾‾‾     
                                     |                                |
-                           END_CONSTRAINT_LOWER_X           END_CONSTRAINT_LOWER_X
+                           END_CONSTRAINT_LOWER_X           -END_CONSTRAINT_LOWER_X
                      
                              <<<---------- Direction of stacking <<<----------
 
@@ -175,7 +183,7 @@ END_LIMIT_LOWER_Y |             | |              N               | |            
                   ‾‾‾‾‾‾‾‾‾‾ ▮▯▯▯             |             ▮▯▯▯‾‾‾‾‾‾‾‾‾‾‾‾
                               ^                                 ^
                               |                                 |
-                       END_LIMIT_LOWER_X                 END_LIMIT_LOWER_X    
+                       END_LIMIT_LOWER_X                 -END_LIMIT_LOWER_X    
                          <<<---------- Direction of stacking <<<----------
 
 """
@@ -195,25 +203,21 @@ DISPLAY_CONSTRAINTS = False
 # Bando Colours
 COLOUR_SILVER = (192,192,192, 255)
 COLOUR_MAROON = (	128,0,0, 255)
-COLOUR_RED = (255,0,0, 255)
 COLOUR_AQUA = (0,255,255, 255)
+COLOUR_RED = (255,0,0, 255)
 COLOUR_PURPLE = (128,0,128, 255)
 COLOUR_BLUE = (0,0,255, 255)
 COLOUR_ORANGE = (255,140,0, 255)
 COLOUR_PINK = (255,20,147, 255)
 COLOUR_GOLD = (255,215,0, 255)
-COLOUR_ALL = [COLOUR_SILVER, COLOUR_MAROON, COLOUR_RED, COLOUR_AQUA, COLOUR_PURPLE, COLOUR_BLUE, COLOUR_ORANGE, COLOUR_PINK, COLOUR_GOLD]
+COLOUR_ALL = [COLOUR_SILVER, COLOUR_MAROON, COLOUR_AQUA, COLOUR_RED, COLOUR_PURPLE, COLOUR_BLUE, COLOUR_ORANGE, COLOUR_PINK, COLOUR_GOLD]
 
+# -------------- IGNORE -----------------
 
 from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class ModelParams:
-   MODEL_NUM_ITERATIONS:int = MODEL_NUM_ITERATIONS
-   MODEL_MAX_STEPS:int = MODEL_MAX_STEPS
-   MODEL_MIN_VELOCITY:float = MODEL_MIN_VELOCITY
-   MODEL_IN_VELOCITY_THRESHOLD_COUNT:int = MODEL_IN_VELOCITY_THRESHOLD_COUNT
-   DISCARD_UNSTABLE_RESULTS:bool = DISCARD_UNSTABLE_RESULTS
    BANDO_CELL_COUNT:int = BANDO_CELL_COUNT
    MODULE_BANDO_COUNT:int = MODULE_BANDO_COUNT
    BANDO_CELL_X:float = BANDO_CELL_X
@@ -237,7 +241,6 @@ class ModelParams:
    END_CONSTRAINT_INCLUDE_Y_CONSTRAINTS:bool = END_CONSTRAINT_INCLUDE_Y_CONSTRAINTS
    END_LIMIT_LOWER_Y:float = END_LIMIT_LOWER_Y
    END_LIMIT_UPPER_Y:float = END_LIMIT_UPPER_Y
-   DISPLAY_CONSTRAINTS:bool = DISPLAY_CONSTRAINTS
 
 
 

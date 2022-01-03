@@ -1,3 +1,15 @@
+###############
+# endConstraints.py
+# TOM WRIGHT 2021
+###############
+
+"""
+Class definitions to handle the limiting features of bandoliers in modules. An EndConstraint is the limit
+connected to the bandolier, an EndLimit is the surface which the EndConstraint sits against. This limit is 
+simulated when the bandolier moves from one side, and the bandolier will either sit on neighboring bandoliers
+cells or it will sit on the end constraints (depending on spacing).
+"""
+
 from dataclasses import dataclass, field
 from typing import List, Tuple
 import pymunk
