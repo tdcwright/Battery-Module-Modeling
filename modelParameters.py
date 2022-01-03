@@ -52,7 +52,7 @@ DISCARD_UNSTABLE_RESULTS = True
 """
 
 # Bandolier cell count
-BANDO_CELL_COUNT = 144
+BANDO_CELL_COUNT = 10#144
 
 # Number of Bandoliers in a module
 MODULE_BANDO_COUNT = 11
@@ -154,8 +154,8 @@ END_CONSTRAINT_UPPER_Y = 30
        END_LIMIT_UPPER_Y |       | |             O             | |       | END_LIMIT_UPPER_Y
                          |      / /   •  •       P       •  •   \ \      |
                          |     / / •  CellN •         •  CellN • \ \     |
-                         ‾‾‾‾ | | •   Pos:   •   E   •   Pos:    • | | ‾‾‾
-                               \ \•   (X,Yn) •   N   •   (-X,Yn) • / /
+                         |    | | •   Pos:   •   E   •   Pos:    • | |   |
+                         ‾‾‾‾‾ \ \•   (X,Yn) •   N   •   (-X,Yn) • / / ‾‾‾
                          •  •   \ \•        •    D    •        • / /  •  •                             
                       •        • \ \  •  •       |       •  •   / /•        •                         
                      •          • | |            |             | |•          •                              
