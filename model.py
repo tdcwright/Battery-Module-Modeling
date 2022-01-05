@@ -68,7 +68,6 @@ def runSimulation(numIterations:int, displayResults:bool=True) -> List[Tuple[Mod
         smallest[0].displayModule(f"Smallest {smallest[1]}mm", False)
 
         showHistogram(results)
-        print(results)
     
     return results
 

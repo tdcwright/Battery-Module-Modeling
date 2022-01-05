@@ -52,7 +52,7 @@ DISCARD_UNSTABLE_RESULTS = True
 """
 
 # Bandolier cell count
-BANDO_CELL_COUNT = 10#144
+BANDO_CELL_COUNT = 144
 
 # Number of Bandoliers in a module
 MODULE_BANDO_COUNT = 11

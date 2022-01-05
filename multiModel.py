@@ -15,7 +15,7 @@ it may slow down your computer and fill up RAM while it is running. I recommend 
 
 import numpy as np
 import itertools
-from typing import Any, Dict, Tuple, List
+from typing import Any, Dict
 
 import csv
 
@@ -115,16 +115,14 @@ def runMultiModel(numIterations:int, displayResults:bool=True):
             writer = csv.DictWriter(file, fieldnames=fieldNames)
             writer.writeheader()
 
-    numStable = 0
-    for modelInputs in tqdm(inputList, unit="Variation", desc="MultiModel"):
-        results = list(tqdm(pool.imap_unordered(worker, 
-                                            list(itertools.repeat(modelInputs, numIterations))),
-                        total=numIterations,
-                        unit="Iteration", 
-                        desc="Model",
-                        disable=True))
+    results = list(tqdm(pool.imap_unordered(worker, 
+                                        [modelInput for modelInput in inputList for _ in range(numIterations)]),
+                    total=len(inputList)*numIterations,
+                    unit="Iteration", 
+                    desc="MultiModel",
+                    disable=False))
         
-        numStable+=results.count(True)
+    numStable = results.count(True)
     
     print(f"Number of stable iterations: {numStable}")
             

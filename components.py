@@ -210,14 +210,14 @@ class Bandolier:
     
     def distanceFromUpperLimit(self) -> Tuple[float, float]:
         if (not self.modelParams.INCLUDE_END_CONSTRAINTS):
-            return 0
+            return (0,0)
         
         limitPos = (self.desiredX+self.modelParams.END_LIMIT_UPPER_X, self.cells[-1].yNominal+self.modelParams.END_LIMIT_UPPER_Y)
         return tuple(np.subtract(self.upperConstraint.body.position, limitPos))
     
     def distanceFromLowerLimit(self) -> Tuple[float, float]:
         if (not self.modelParams.INCLUDE_END_CONSTRAINTS):
-            return 0
+            return (0,0)
         
         limitPos = (self.desiredX+self.modelParams.END_LIMIT_LOWER_X, self.cells[0].yNominal-self.modelParams.END_LIMIT_LOWER_Y)
         return tuple(np.subtract(self.lowerConstraint.body.position, limitPos))
