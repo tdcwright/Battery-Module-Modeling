@@ -48,7 +48,7 @@ def showHistogram(results:List[Tuple[Module, Dict[str, Any]]]) -> None:
 def runSimulation(numIterations:int, displayResults:bool=True) -> List[Tuple[Module, float, bool]]:    
     pool = Pool()
 
-    results:List[Tuple[Module, float, bool]] = list(tqdm(pool.imap_unordered(worker, 
+    results:List[Tuple[Module, Dict[str,Any]]] = list(tqdm(pool.imap_unordered(worker, 
                                                                             range(numIterations)),
                                                         total=numIterations,
                                                         unit="Iteration", 
@@ -64,8 +64,8 @@ def runSimulation(numIterations:int, displayResults:bool=True) -> List[Tuple[Mod
     smallest = min(results, key=lambda x: x[1]["totalModuleWidth"])
 
     if (displayResults):
-        largest[0].displayModule(f"Largest: {largest[1]}mm", False)
-        smallest[0].displayModule(f"Smallest {smallest[1]}mm", False)
+        largest[0].displayModule(f"Largest: {largest[1]['totalModuleWidth']}mm", False)
+        smallest[0].displayModule(f"Smallest: {smallest[1]['totalModuleWidth']}mm", False)
 
         showHistogram(results)
     

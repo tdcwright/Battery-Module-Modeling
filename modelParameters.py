@@ -9,10 +9,10 @@ These values should be changed to match reality.
 """
 
 # Number of Iterations
-MODEL_NUM_ITERATIONS = 10
+MODEL_NUM_ITERATIONS = 3
 
 # Final Velocity Tolerance
-MODEL_MAX_STEPS = 30000 # Maximum number of steps before exit
+MODEL_MAX_STEPS = 17000 # Maximum number of steps before exit
 MODEL_MIN_VELOCITY = 0.2 # lower this number to increase accuracy. The lower the number, the longer the runtime. Must be > 0
 MODEL_IN_VELOCITY_THRESHOLD_COUNT = 500
 
